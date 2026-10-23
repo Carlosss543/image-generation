@@ -27,7 +27,7 @@ def train_one_epoch(args, train_loader, vae, model, criterion, optimizer, scaler
         torch.cuda.synchronize(args.device)
         t_vae = time.perf_counter()
 
-        t = torch.rand((x1.shape[0], 1), device=args.device)
+        t = torch.rand(x1.shape[0], device=args.device)
         xt, x0 = noise_imgs(args, x1, t)
         targets = x1 - x0
 
@@ -79,7 +79,7 @@ def evaluate(args, val_loader, vae, model, criterion, scaler, epoch):
             posterior = vae.encode(imgs)
         x1 = posterior.latent_dist.sample() * vae.config.scaling_factor
 
-        t = torch.rand((x1.shape[0], 1), device=args.device)
+        t = torch.rand(x1.shape[0], device=args.device)
         xt, x0 = noise_imgs(args, x1, t)
         targets = x1 - x0
 

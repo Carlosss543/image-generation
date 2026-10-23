@@ -1,5 +1,36 @@
 import torch
 import torch.nn as nn
+import math
+
+
+class TimestepEmbedder(nn.Module):
+
+    def __init__(self, hidden_size, frequency_embedding_size=256):
+        super().__init__()
+
+        self.frequency_embedding_size = frequency_embedding_size
+        self.mlp = nn.Sequential(
+            nn.Linear(frequency_embedding_size, hidden_size),
+            nn.SiLU(),
+            nn.Linear(hidden_size, hidden_size),
+        )
+
+    @staticmethod
+    def timestep_embedding(t, dim, max_period=10000):
+        half = dim // 2
+        freqs = torch.exp(
+            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
+        ).to(device=t.device)
+        args = t[:, None].float() * freqs[None]
+        embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
+        if dim % 2:
+            embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
+        return embedding
+
+    def forward(self, t):
+        t_freq = self.timestep_embedding(t, self.frequency_embedding_size)
+        t_emb = self.mlp(t_freq)
+        return t_emb
 
 
 class TransformerBlock(nn.Module):
@@ -56,11 +87,7 @@ class DiT(nn.Module):
         self.patchify = nn.Conv2d(img_channels, embed_dim, kernel_size=patch_size, stride=patch_size)
         self.pos_embedding = nn.Parameter(torch.empty(1, (img_size//patch_size)**2, embed_dim).normal_(std=0.02))
 
-        self.t_embedding = nn.Sequential(
-            nn.Linear(1, embed_dim),
-            nn.SiLU(),
-            nn.Linear(embed_dim, embed_dim)
-        )
+        self.t_embedding = TimestepEmbedder(embed_dim)
         if num_classes is not None:
             self.label_embedding_table = nn.Embedding(num_classes, embed_dim)
 
@@ -77,7 +104,7 @@ class DiT(nn.Module):
         )
         nn.init.constant_(self.adaLN_zero_unpatchify[2].weight, 0)
         nn.init.constant_(self.adaLN_zero_unpatchify[2].bias, 0)
-    
+
     def forward(self, imgs, t, labels=None):
         token_embed = self.patchify(imgs).flatten(2).transpose(1, 2)
         x = token_embed + self.pos_embedding # (B, num_patches, embed_dim)
