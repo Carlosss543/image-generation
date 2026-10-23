@@ -1,0 +1,8 @@
+__pycache__/
+checkpoints/
+wandb_logs/
+
+job_script.sh
+training_logs/
+
+tests.ipynb
