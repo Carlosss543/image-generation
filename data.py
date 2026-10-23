@@ -1,9 +1,6 @@
-import os
-from PIL import Image
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import torch
-from torchvision import datasets
+from torchvision import transforms, datasets
+from torch.utils.data import DataLoader
 
 
 def get_loaders(args):
@@ -12,6 +9,7 @@ def get_loaders(args):
 
     transform = transforms.Compose([
         transforms.Resize(args.img_size),
+        transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(args.mean, args.std),
     ])
@@ -19,8 +17,8 @@ def get_loaders(args):
     train_dataset = datasets.ImageFolder(f"{args.data_dir}/train", transform=transform)
     val_dataset = datasets.ImageFolder(f"{args.data_dir}/val", transform=transform)
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=1)
+    train_loader = DataLoader(train_dataset, batch_size=args.micro_batch_size, shuffle=True, num_workers=1)
+    val_loader = DataLoader(val_dataset, batch_size=args.micro_batch_size, shuffle=False, num_workers=1)
 
     print("Number of training images:", len(train_dataset), "Number of validation images:", len(val_dataset))
 

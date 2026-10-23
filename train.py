@@ -19,7 +19,9 @@ def get_args_parser():
     parser.add_argument("--img_channels", type=int, default=3)
     parser.add_argument("--num_classes", type=int, default=3)
 
-    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=256)
+    parser.add_argument("--micro_batch_size", type=int, default=64)
+
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument("--lr", type=float, default=1e-4)
 
@@ -34,6 +36,9 @@ def get_args_parser():
 def main(args):
     assert torch.cuda.is_available(), "CUDA is not available. Please run on a machine with a compatible NVIDIA GPU."
     args.device = torch.device("cuda")
+
+    assert args.batch_size % args.micro_batch_size == 0, "batch_size must be divisible by micro_batch_size"
+    args.num_accum_steps = args.batch_size // args.micro_batch_size
 
 
     train_loader, val_loader = get_loaders(args)
