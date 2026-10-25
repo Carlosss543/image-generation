@@ -12,7 +12,8 @@ def noise_imgs(args, x1, t):
 def sample(args, n_imgs, model, labels=None):
     model.eval()
     xt = torch.randn((n_imgs, 4, 32, 32), device=args.device)
-    for t in torch.linspace(0, 1, args.T):
-        t = t.expand(xt.shape[0]).to(args.device)
-        xt = xt + 1/args.T * model(xt, t, labels)
+    dt = 1 / args.T
+    for i in range(args.T):
+        t = torch.full((n_imgs,), i * dt, device=args.device)
+        xt = xt + dt * model(xt, t, labels)
     return xt

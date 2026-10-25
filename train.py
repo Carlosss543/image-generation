@@ -19,10 +19,11 @@ def get_args_parser():
     parser.add_argument("--img_channels", type=int, default=3)
     parser.add_argument("--num_classes", type=int, default=3)
 
-    parser.add_argument("--batch_size", type=int, default=256)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--micro_batch_size", type=int, default=64)
 
-    parser.add_argument("--num_epochs", type=int, default=100)
+    parser.add_argument("--num_epochs", type=int, default=300)
+
     parser.add_argument("--lr", type=float, default=1e-4)
 
     parser.add_argument("--T", type=int, default=200)
@@ -73,7 +74,6 @@ def main(args):
         checkpoint = torch.load(f"{args.output_dir}/{args.wandb_run_id}.pt", map_location=args.device)
         base_model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        # lr_scheduler.load_state_dict(checkpoint["lr_scheduler_state_dict"])
         scaler.load_state_dict(checkpoint["scaler_state_dict"])
         start_epoch = checkpoint["epoch"] + 1
         del checkpoint # free up memory
@@ -108,7 +108,6 @@ def main(args):
                 "epoch": epoch,
                 "model_state_dict": model_to_save.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
-                # "lr_scheduler_state_dict": lr_scheduler.state_dict(),
                 "scaler_state_dict": scaler.state_dict(),
                 "args": config
             }

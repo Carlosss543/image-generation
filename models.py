@@ -28,7 +28,7 @@ class TimestepEmbedder(nn.Module):
         return embedding
 
     def forward(self, t):
-        t_freq = self.timestep_embedding(t, self.frequency_embedding_size)
+        t_freq = self.timestep_embedding(t*1000.0, self.frequency_embedding_size) # with flow matching t is in [0, 1] so we scale it to [0, 1000] for the embedding
         t_emb = self.mlp(t_freq)
         return t_emb
 
@@ -132,7 +132,7 @@ def dit(img_size, img_channels, num_classes):
         img_size=img_size,
         img_channels=img_channels,
         num_classes=num_classes,
-        patch_size=4,
+        patch_size=2,
         num_blocks=12,
         num_heads=12,
         embed_dim=12*64,
